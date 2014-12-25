@@ -4,47 +4,75 @@ import java.util.Date
 
 import scala.util.{Failure, Success, Try}
 
-sealed trait Transaction{
-  def time:Date
-  def amount:Long
-  
-  def transact(account:Account,fromAmount:Long):Try[Long]
+sealed trait Transaction {
+  def time: Date
+
+  def amount: Long
+
+  def valid: Try[Unit]
+
+  /** the amount that results from applying this transaction on the account given a previous amount */
+  def amount(account: Account, prevAmount: Long): Long
 }
 
-case class Deposit(time:Date,amount:Long,to:Account) extends Transaction{
-  override def transact(account:Account,fromAmount: Long): Try[Long] = Success(fromAmount+amount)
-}
-case class Withdrawal(time:Date,amount:Long,from:Account) extends Transaction{
-  override def transact(account:Account,fromAmount: Long): Try[Long] = if(fromAmount<amount) Success(fromAmount-amount) else Failure(new InsufficientFundsException())
-  
-}
-case class Transfer(time:Date,amount:Long,from:Account,to:Account) extends Transaction{
-  override def transact(account:Account,fromAmount: Long): Try[Long] = {
-    if (from.number == account.number) {
-      if (fromAmount < amount) Success(fromAmount - amount) else Failure(new InsufficientFundsException())
+case class Deposit(time: Date, amount: Long, to: Account) extends Transaction {
+  override val valid:Success[Unit] = Success(())
 
-    } else if (to.number == account.number) Success(fromAmount + amount)
+  override def amount(account: Account, prevAmount: Long): Long = prevAmount + amount
+}
+
+case class Withdrawal(time: Date, amount: Long, from: Account) extends Transaction {
+  override def valid = if (from.balance >= amount) Success(()) else InsufficientFunds()
+
+  /** determines the new amount after this transaction for the account given the previous amount */
+  override def amount(account: Account, prevAmount: Long): Long = prevAmount - amount
+
+}
+
+case class Transfer(time: Date, amount: Long, from: Account, to: Account) extends Transaction {
+  override def valid = if (from.balance >= amount) Success(()) else InsufficientFunds()
+
+  override def amount(account: Account, prevAmount: Long): Long = {
+    if (from.number == account.number) prevAmount - amount
+    else if (to.number == account.number) prevAmount + amount
     else throw new IllegalStateException()
   }
 }
 
-case class Account(number:Long,history:List[Transaction]){
-  def transfer(amount: Long, to: Account):Tuple2[Account,Account] = {
-    val tx= Transfer(new Date(),amount, from=this,to=to)
-    (this.copy(history=tx::this.history),to.copy(history=tx::to.history))
+case class Account(number: Long, history: List[Transaction]) {
+  lazy val balance:Long = balance(new Date())
+
+  def balance(date: Date):Long = {
+    history.dropWhile(tx => tx.time.after(date))
+      .foldLeft(0L) { (acc, tx) =>
+        tx.amount(account = this, prevAmount = acc)
+    }
+  }
+}
+
+object Account {
+
+  def withdraw(from: Account, amount: Long,time:Date=new Date()): Try[Account] = {
+    val tx = Withdrawal(time, amount, from = from)
+    tx.valid.map { _ => from.copy(history = tx :: from.history)}
   }
 
-  def withdraw(amount: Long) = this.copy(history=Withdrawal(new Date(),amount,from=this)::this.history)
+  def deposit(to: Account, amount: Long,time:Date=new Date()): Try[Account] = {
+    val tx = Deposit(time, amount, to = to)
+    tx.valid.map(_ => to.copy(history = tx :: to.history))
+  }
 
-  def balance= history.foldLeft(0L){(acc,tx)=> tx.transact(account=this,fromAmount=acc).get }
-  def deposit(amount:Long)= this.copy(history=Deposit(new Date(), amount, to = this)::this.history)
+  /** if successful returns a pair of the new from and to accounts */
+  def transfer(amount: Long, from: Account, to: Account,time:Date=new Date()): Try[(Account, Account)] = {
+    val tx = Transfer(time, amount, from = from, to = to)
+    tx.valid.map(_ => (from.copy(history = tx :: from.history), to.copy(history = tx :: to.history)))
+  }
+
+  def newAccount(number: Long): Account = Account(number, Nil)
 }
 
-object Account  {
-  
+object InsufficientFunds {
+  def apply() = Failure(new RuntimeException("insufficient funds"))
 
-  def New(number:Long):Account=Account(number,Nil)
 }
-
-class InsufficientFundsException() extends RuntimeException("insufficient funds")
 
