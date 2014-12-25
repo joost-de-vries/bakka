@@ -7,7 +7,7 @@ import TestDate._
 
 import scala.util.Try
 
-class TransferSpec extends FunSpec with GivenWhenThen {
+class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValues{
   describe("An account") {
 
     it("should allow depositing an amount") {
@@ -19,16 +19,14 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val resultAccountTry = deposit(to = origAccount, amount = amount)
 
       Then("the result should be successful")
+      resultAccountTry should be a 'success
       val resultAccount = resultAccountTry.get
 
       And("the history should contain one transaction")
-      assertResult(1) {
-        resultAccount.history.size
-      }
+      resultAccount.history.size should be(1)
 
       And("the balance should be equal to the deposited amount")
-
-      assert(resultAccount.balance === amount)
+      resultAccount.balance should be(amount)
     }
 
     it("should determine a historical balance") {
@@ -42,20 +40,17 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val balance2 = resultAccount.balance(date = JAN3_2001)
 
       Then("the result should be correct for that time")
-      assert(balance2 === 50L)
+      balance2 should be(50L)
       
       And("the balance should be correct for other points in time as well")
       val balance1=resultAccount.balance(date=JAN1_2001)
-      assert(balance1===20L)
+      balance1 should be(20L)
       val balance0=resultAccount.balance(date=JAN1_2000)
-      assert(balance0===0L)
+      balance0 should be(0L)
       val balance3= resultAccount.balance(date=JAN5_2001)
-      assert(balance3===100L)
+      balance3 should be(100L)
       val balance4=resultAccount.balance(date=JAN1_2002)
-      assert(balance4===100L)
-
-      
-
+      balance4 should be(100L)
     }
 
     it("should allow withdrawing an amount") {
@@ -68,16 +63,15 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val resultAccountTry = withdraw(origAccount, amount)
 
       Then("the result should be successful")
+      resultAccountTry should be a 'success
       val resultAccount = resultAccountTry.get
 
       And("the history should contain two transactions")
-      assertResult(2) {
-        resultAccount.history.size
-      }
+      resultAccount.history.size should be(2)
 
       And("the balance should be equal to the original amount minus the withdrawal")
 
-      assert(resultAccount.balance === origAccount.balance - amount)
+      resultAccount.balance should be(origAccount.balance - amount)
     }
 
     it("should not allow withdrawing more than is available") {
@@ -90,7 +84,7 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val resultAccountTry = withdraw(origAccount, amount)
 
       Then("the result should be unsuccessful")
-      assert(resultAccountTry.isFailure)
+      resultAccountTry.failure.exception should have message "insufficient funds"
     }
 
     it("should allow transferring an amount") {
@@ -106,15 +100,16 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val resultTry = transfer(amount, from = origAccount, to = account2)
 
       Then("the transfer should be successful")
+      resultTry should be a 'success
       val (resultAccount, resultAccount2) = resultTry.get
 
       And("the tx should be part of the history of both accounts")
-      assert(resultAccount.history.head.amount == amount)
-      assert(resultAccount.history.head.amount == amount)
+      resultAccount.history.head.amount should be(amount)
+      resultAccount.history.head.amount should be(amount)
 
       And("the sum of the accounts balances should remain the same")
 
-      assert(resultAccount.balance + resultAccount2.balance ===
+      (resultAccount.balance + resultAccount2.balance ) should be(
         origAccount.balance + account2.balance)
     }
 
@@ -131,8 +126,7 @@ class TransferSpec extends FunSpec with GivenWhenThen {
       val resultTry = transfer(amount, from = origAccount, to = account2)
 
       Then("the transfer should be unsuccessful")
-      assert(resultTry.isFailure)
-
+      resultTry.failure.exception should have message "insufficient funds"
     }
   }
 }
