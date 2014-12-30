@@ -1,13 +1,14 @@
 import java.util.Date
-
-import banking.Account
+import banking.domain.Account
+import org.junit.runner.RunWith
 import org.scalatest._
-import banking.Account._
+import Account._
 import TestDate._
+import org.scalatest.junit.JUnitRunner
 
 import scala.util.Try
-
-class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValues{
+@RunWith(classOf[JUnitRunner])
+class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValues {
   describe("An account") {
 
     it("should allow depositing an amount") {
@@ -16,7 +17,7 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
 
       When("a deposit is made")
       val amount = 100L
-      val resultAccountTry = deposit(to = origAccount, amount = amount)
+      val resultAccountTry = origAccount.deposit(amount)
 
       Then("the result should be successful")
       resultAccountTry should be a 'success
@@ -32,35 +33,37 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
     it("should determine a historical balance") {
       Given("a new account with a history")
       val origAccount = newAccount(1174L)
-      val resultAccount = (for {acc1 <- deposit(to = origAccount, amount = 20L, time = JAN1_2001)
-                               acc2 <- deposit(to = acc1, amount = 30L, time = JAN3_2001)
-                               acc3 <- deposit(to = acc2, amount = 50L, time = JAN5_2001)} yield acc3).get
+      val resultAccount = (for {
+        acc1 <- origAccount.deposit(amount = 20L, time = JAN1_2001)
+        acc2 <- acc1.deposit(amount = 30L, time = JAN3_2001)
+        acc3 <- acc2.deposit(amount = 50L, time = JAN5_2001)}
+      yield acc3).get
 
       When("a previous balance is requested")
       val balance2 = resultAccount.balance(date = JAN3_2001)
 
       Then("the result should be correct for that time")
       balance2 should be(50L)
-      
+
       And("the balance should be correct for other points in time as well")
-      val balance1=resultAccount.balance(date=JAN1_2001)
+      val balance1 = resultAccount.balance(date = JAN1_2001)
       balance1 should be(20L)
-      val balance0=resultAccount.balance(date=JAN1_2000)
+      val balance0 = resultAccount.balance(date = JAN1_2000)
       balance0 should be(0L)
-      val balance3= resultAccount.balance(date=JAN5_2001)
+      val balance3 = resultAccount.balance(date = JAN5_2001)
       balance3 should be(100L)
-      val balance4=resultAccount.balance(date=JAN1_2002)
+      val balance4 = resultAccount.balance(date = JAN1_2002)
       balance4 should be(100L)
     }
 
     it("should allow withdrawing an amount") {
       Given("an account with sufficient funds")
 
-      val origAccount = deposit(newAccount(1174L), 100L).get
+      val origAccount = newAccount(1174L).deposit(100L).get
 
       When("a withdrawal is made")
       val amount = 70L
-      val resultAccountTry = withdraw(origAccount, amount)
+      val resultAccountTry = origAccount.withdraw(amount)
 
       Then("the result should be successful")
       resultAccountTry should be a 'success
@@ -77,11 +80,11 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
     it("should not allow withdrawing more than is available") {
       Given("an account with insufficient funds")
 
-      val origAccount = deposit(newAccount(1174L), 100L).get
+      val origAccount = newAccount(1174L).deposit(100L).get
 
       When("a withdrawal is made")
       val amount = 170L
-      val resultAccountTry = withdraw(origAccount, amount)
+      val resultAccountTry = origAccount.withdraw(amount)
 
       Then("the result should be unsuccessful")
       resultAccountTry.failure.exception should have message "insufficient funds"
@@ -90,7 +93,7 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
     it("should allow transferring an amount") {
       Given("an account with sufficient funds")
       val depositAmount = 100L
-      val origAccount = deposit(newAccount(1174L), depositAmount).get
+      val origAccount = newAccount(1174L).deposit(depositAmount).get
 
       And("another new account")
       val account2 = newAccount(42L)
@@ -109,14 +112,14 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
 
       And("the sum of the accounts balances should remain the same")
 
-      (resultAccount.balance + resultAccount2.balance ) should be(
+      (resultAccount.balance + resultAccount2.balance) should be(
         origAccount.balance + account2.balance)
     }
 
     it("should not allow transferring more than is available") {
       Given("an account with insufficient funds")
       val depositAmount = 100L
-      val origAccount = deposit(newAccount(1174L), depositAmount).get
+      val origAccount = newAccount(1174L).deposit(depositAmount).get
 
       And("another new account")
       val account2 = newAccount(42L)

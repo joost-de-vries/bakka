@@ -1,4 +1,5 @@
-import banking.{Transaction, Account}
+import banking.domain
+import banking.domain.Account
 import org.scalatest.{Matchers, FlatSpec, FunSpec}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
