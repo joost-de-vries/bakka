@@ -1,4 +1,4 @@
-name := """bank-test-scala"""
+name := """bank-test"""
 
 version := "1.0"
 
