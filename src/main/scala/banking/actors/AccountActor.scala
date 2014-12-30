@@ -49,7 +49,10 @@ class AccountActor(number:Long) extends Actor with ActorLogging  {
     case GetBalanceRequest => {
       sender() ! account.balance
     }
-    case _ => sender() ! DoNotUnderstand.message
+    case a@_ => {
+      log.error(s"${getClass().getName} received unexpected message $a")
+      sender() ! DoNotUnderstand.message
+    }
   }
    
   /** update account or send error message */

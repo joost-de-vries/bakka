@@ -55,7 +55,7 @@ class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
 
       case error:String if error==InsufficientFunds.message && fromOutstandingRqSender(sender())=> ??? //now what?
       case a@_ => {
-        log.error(s"actormanager doesn't understand $a")
+        log.error(s"${getClass().getName} received unexpected message $a")
         sender() ! DoNotUnderstand
       }
     }
