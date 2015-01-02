@@ -1,4 +1,4 @@
-name := """bank-test"""
+name := """bakka"""
 
 version := "1.0"
 

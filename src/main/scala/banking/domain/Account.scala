@@ -11,7 +11,7 @@ case class Account(number: Long, history: List[Transaction]) {
 
   def balance(date: Date):Long = {
     history.dropWhile(tx => tx.time.after(date))
-      .foldLeft(0L) { (acc, tx) =>
+      .foldRight(0L) { (tx,acc) =>
         tx.amount(account = this, prevAmount = acc)
     }
   }

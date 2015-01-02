@@ -34,26 +34,26 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
       Given("a new account with a history")
       val origAccount = newAccount(1174L)
       val resultAccount = (for {
-        acc1 <- origAccount.deposit(amount = 20L, time = JAN1_2001)
-        acc2 <- acc1.deposit(amount = 30L, time = JAN3_2001)
-        acc3 <- acc2.deposit(amount = 50L, time = JAN5_2001)}
+        acc1 <- origAccount.deposit(amount = 100L, time = JAN1_2001)
+        acc2 <- acc1.withdraw(amount = 30L, time = JAN3_2001)
+        acc3 <- acc2.withdraw(amount = 50L, time = JAN5_2001)}
       yield acc3).get
 
       When("a previous balance is requested")
       val balance2 = resultAccount.balance(date = JAN3_2001)
 
       Then("the result should be correct for that time")
-      balance2 should be(50L)
+      balance2 should be(70L)
 
       And("the balance should be correct for other points in time as well")
       val balance1 = resultAccount.balance(date = JAN1_2001)
-      balance1 should be(20L)
+      balance1 should be(100L)
       val balance0 = resultAccount.balance(date = JAN1_2000)
       balance0 should be(0L)
       val balance3 = resultAccount.balance(date = JAN5_2001)
-      balance3 should be(100L)
+      balance3 should be(20L)
       val balance4 = resultAccount.balance(date = JAN1_2002)
-      balance4 should be(100L)
+      balance4 should be(20L)
     }
 
     it("should allow withdrawing an amount") {

@@ -36,7 +36,6 @@ realpath () {
 )
 }
 
-# TODO - Do we need to detect msys?
 
 # Uses uname to detect if we're in the odd cygwin environment.
 is_cygwin() {
@@ -213,7 +212,6 @@ process_args () {
 
 # Actually runs the script.
 run() {
-  # TODO - check for sane environment
 
   # process the combined args, then reset "$@" to the residuals
   process_args "$@"
