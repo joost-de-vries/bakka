@@ -12,26 +12,26 @@ case class Account(number: Long, history: List[Transaction]) {
   def balance(date: Date):Long = {
     history.dropWhile(tx => tx.time.after(date))
       .foldRight(0L) { (tx,acc) =>
-        tx.amount(account = this, prevAmount = acc)
+        tx.amount(prevAmount = acc)
     }
   }
   def withdraw(amount: Long,time:Date=new Date()): Try[Account] = {
     val tx = Withdrawal(time, amount, from = this)
-    tx.valid.map { _ => this.copy(history = tx :: history)}
+    tx.valid(this).map { _ => this.copy(history = tx :: history)}
   }
 
   def deposit(amount: Long,time:Date=new Date()): Try[Account] = {
     val tx = Deposit(time, amount, to = this)
-    tx.valid.map(_ => this.copy(history = tx ::history))
+    tx.valid(this).map(_ => this.copy(history = tx ::history))
   }
   
   def transfer(amount: Long, toAccountNr:Long,time:Date=new Date()): Try[Account] = {
     val tx = TransferFrom(time, amount, from = this, toAccountNr = toAccountNr)
-    tx.valid.map(_ => this.copy(history = tx :: this.history))
+    tx.valid(this).map(_ => this.copy(history = tx :: this.history))
   }
   def receiveTransfer(amount: Long, fromAccountNr:Long,time:Date=new Date()): Try[Account] = {
     val tx = TransferTo(time, amount, to = this, fromAccountNr = fromAccountNr)
-    tx.valid.map(_ => this.copy(history = tx :: this.history))
+    tx.valid(this).map(_ => this.copy(history = tx :: this.history))
   }
 }
 
