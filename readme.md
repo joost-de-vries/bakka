@@ -15,5 +15,4 @@ The current balance amount is determined by doing a `foldRight` on the history; 
 ##Concurrency
 
 ##Todo
-- transaction and account contain snapshot of eachother  
 - handle concurrent access to transfers(!)  

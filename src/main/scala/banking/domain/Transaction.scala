@@ -22,21 +22,21 @@ case class Deposit(time: Date, amount: Long, to: Account) extends Transaction {
   override def amount(prevAmount: Long): Long = prevAmount + amount
 }
 
-case class Withdrawal(time: Date, amount: Long, from: Account) extends Transaction {
-  override def valid(account:Account) = if (from.balance >= amount) Success(()) else InsufficientFunds()
+case class Withdrawal(time: Date, amount: Long) extends Transaction {
+  override def valid(account:Account) = if (account.balance >= amount) Success(()) else InsufficientFunds()
 
   /** determines the new amount after this transaction for the account given the previous amount */
   override def amount(prevAmount: Long): Long = prevAmount - amount
 }
 
 //TODO extend transferfrom from withdrawal
-case class TransferFrom(time: Date, amount: Long, from: Account, toAccountNr:Long) extends Transaction {
-  override def valid(account:Account) = if (from.balance >= amount) Success(()) else InsufficientFunds()
+case class TransferFrom(time: Date, amount: Long, toAccountNr:Long) extends Transaction {
+  override def valid(account:Account) = if (account.balance >= amount) Success(()) else InsufficientFunds()
 
   override def amount(prevAmount: Long): Long = prevAmount - amount
 }
 
-case class TransferTo(time: Date, amount: Long, to: Account, fromAccountNr:Long) extends Transaction {
+case class TransferTo(time: Date, amount: Long, fromAccountNr:Long) extends Transaction {
   override def valid(account:Account) =  Success(())
 
   override def amount(prevAmount: Long): Long = {

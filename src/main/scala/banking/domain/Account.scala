@@ -16,7 +16,7 @@ case class Account(number: Long, history: List[Transaction]) {
     }
   }
   def withdraw(amount: Long,time:Date=new Date()): Try[Account] = {
-    val tx = Withdrawal(time, amount, from = this)
+    val tx = Withdrawal(time, amount)
     tx.valid(this).map { _ => this.copy(history = tx :: history)}
   }
 
@@ -26,11 +26,11 @@ case class Account(number: Long, history: List[Transaction]) {
   }
   
   def transfer(amount: Long, toAccountNr:Long,time:Date=new Date()): Try[Account] = {
-    val tx = TransferFrom(time, amount, from = this, toAccountNr = toAccountNr)
+    val tx = TransferFrom(time, amount, toAccountNr = toAccountNr)
     tx.valid(this).map(_ => this.copy(history = tx :: this.history))
   }
   def receiveTransfer(amount: Long, fromAccountNr:Long,time:Date=new Date()): Try[Account] = {
-    val tx = TransferTo(time, amount, to = this, fromAccountNr = fromAccountNr)
+    val tx = TransferTo(time, amount, fromAccountNr = fromAccountNr)
     tx.valid(this).map(_ => this.copy(history = tx :: this.history))
   }
 }
