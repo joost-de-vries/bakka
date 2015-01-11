@@ -16,7 +16,7 @@ sealed trait Transaction {
   def amount(prevAmount: Long): Long
 }
 
-case class Deposit(time: Date, amount: Long, to: Account) extends Transaction {
+case class Deposit(time: Date, amount: Long) extends Transaction {
   override def valid(account:Account):Success[Unit] = Success(())
 
   override def amount(prevAmount: Long): Long = prevAmount + amount
