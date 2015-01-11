@@ -10,7 +10,7 @@ class ActorSpec extends TestKit(ActorSystem("TestKitActorSystem",
   ConfigFactory.parseString(ActorSpec.config)))
 with DefaultTimeout with ImplicitSender
 with WordSpecLike with Matchers with BeforeAndAfterAll{
-  override def afterAll =shutdown()
+  override def afterAll() = shutdown()
 }
 
 object ActorSpec {

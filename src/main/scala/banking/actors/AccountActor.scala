@@ -26,6 +26,7 @@ object AccountActor {
   case class TransferToRequest(amount: Long, fromAccountNumber: Long)
 
   case class TransferFromRequest(amount: Long, toAccountNumber: Long, toAccount: ActorRef)
+
 }
 
 class AccountActor(var account: Account) extends Actor with ActorLogging {
@@ -33,31 +34,30 @@ class AccountActor(var account: Account) extends Actor with ActorLogging {
   import AccountActor._
 
   override def receive: Receive = {
-    case DepositRequest(amount) => {
+    case DepositRequest(amount) =>
       update(account.deposit(amount))
-    }
-    case WithdrawalRequest(amount) => {
+
+    case WithdrawalRequest(amount) =>
       update(account.withdraw(amount))
-    }
-    case TransferFromRequest(amount, toAccNumber, toAccountActor) => {
+
+    case TransferFromRequest(amount, toAccNumber, toAccountActor) =>
       account.transfer(amount, toAccountNr = toAccNumber) match {
         case Success(newAccount) =>
           toAccountActor ! TransferToRequest(amount, account.number)
           context become transfering(newAccount, sender())
         case Failure(e) =>
-          sender() ! e.getMessage()
+          sender() ! e.getMessage
       }
-    }
-    case TransferToRequest(amount, fromAccNumber) => {
+    case TransferToRequest(amount, fromAccNumber) =>
       update(account.receiveTransfer(amount, fromAccountNr = fromAccNumber))
-    }
-    case GetBalanceRequest => {
+
+    case GetBalanceRequest =>
       sender() ! account.balance
-    }
-    case a@_ => {
-      log.error(s"${getClass().getName} received unexpected message $a")
+
+    case a@_ =>
+      log.error(s"${getClass.getName} received unexpected message $a")
       sender() ! DoNotUnderstand.message
-    }
+
   }
 
   /** update account or send error message */
@@ -66,7 +66,7 @@ class AccountActor(var account: Account) extends Actor with ActorLogging {
       case Success(newAccount) =>
         account = newAccount
         sender() ! account.balance
-      case Failure(e) => sender() ! e.getMessage()
+      case Failure(e) => sender() ! e.getMessage
     }
   }
 
@@ -78,9 +78,8 @@ class AccountActor(var account: Account) extends Actor with ActorLogging {
     case error: String =>
       origSender ! error
       context unbecome()
-    case a@_ => {
-      log.error(s"${getClass().getName} received unexpected message $a")
+    case a@_ =>
+      log.error(s"${getClass.getName} received unexpected message $a")
       sender() ! DoNotUnderstand.message
-    }
   }
 }

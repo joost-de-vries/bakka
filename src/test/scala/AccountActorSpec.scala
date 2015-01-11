@@ -5,6 +5,7 @@ import banking.domain.{Deposit, Account, InsufficientFunds}
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import scala.language.postfixOps
 import scala.util.Random
 
 import org.scalatest.BeforeAndAfterAll

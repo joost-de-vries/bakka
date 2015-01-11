@@ -29,18 +29,17 @@ class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
            Envelope(_, TransferFromRequest(_, _, _)) =>
         sender() ! NotAllowed.message
 
-      case Envelope(accountNumber, TransferRequest(amount, toAccountNumber)) => {
+      case Envelope(accountNumber, TransferRequest(amount, toAccountNumber)) => 
         val fromAccountRef = getOrCreateChild(props = AccountActor.props(accountNumber), name = accountNumber.toString)
         val toAccountRef = getOrCreateChild(props = AccountActor.props(toAccountNumber), name = toAccountNumber.toString)
         fromAccountRef forward TransferFromRequest(amount = amount, toAccountNumber = toAccountNumber, toAccountRef)
-      }
+
       case Envelope(accountNumber, payload) =>
         getOrCreateChild(props = AccountActor.props(accountNumber), name = accountNumber.toString) forward payload
 
-      case a@_ => {
-        log.error(s"${getClass().getName} received unexpected message $a")
+      case a@_ =>
+        log.error(s"${getClass.getName} received unexpected message $a")
         sender() ! DoNotUnderstand
-      }
     }
   
 

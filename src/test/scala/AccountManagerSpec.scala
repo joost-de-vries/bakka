@@ -2,6 +2,7 @@ import akka.testkit.TestProbe
 import banking.actors.AccountActor.{GetBalanceRequest, TransferFromRequest, DepositRequest}
 import banking.actors.AccountManagerActor
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 
 /**
