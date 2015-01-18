@@ -74,15 +74,20 @@ class AccountActorSpec
     "Handle no response from counter account when transferring" in {
       within(AccountActor.TRANSFER_TIMEOUT + 500 millis) {
         val toAccount = TestProbe()
-        val account = accountRef(50L)
+        val initialAmount = 50L
+        val account = accountRef(initialAmount)
         account ! TransferFromRequest(amount = 40L, toAccountNumber = 200L, toAccount.ref)
 
         toAccount.expectMsg(TransferToRequest(amount = 40L, fromAccountNumber = 100L))
-        //we're not confirming the transfer: toAccount.reply(40L)
+        //we're intentionally not confirming the transfer. I.e. no toAccount.reply(40L)
+        account ! GetBalanceRequest //send another message just to be confusing
+        
         expectMsgPF(AccountActor.TRANSFER_TIMEOUT + 100 millis) {
           case string: String => string.contains("timeout") should be(true)
-          case msg: Any => this.fail(s"unexpected message $msg")
         }
+
+        //our balancerequest should not resolve the transfer timeout and should be handled after the timeout
+        expectMsg(initialAmount)
         expectNoMsg()
 
       }
