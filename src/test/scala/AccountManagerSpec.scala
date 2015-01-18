@@ -48,5 +48,27 @@ class AccountManagerSpec extends ActorSpec{
         expectMsg(30L)
       }
     }
+    "Not lose actions when transfering" in {
+      within(500 millis) {
+        val accountMgr = accountManagerRef
+        val accNr = 3
+        val counterAccNr = 7
+
+        for (i <- 0 until 10) {
+          accountMgr ! Envelope(accNr, DepositRequest(100))
+          accountMgr ! Envelope(accNr, TransferRequest(70, toAccountNumber = counterAccNr))
+
+        }
+        for (msg <- receiveN(20)) {
+          msg.isInstanceOf[Long] should be(true)
+        }
+
+        accountMgr ! Envelope(accNr, GetBalanceRequest)
+        expectMsg(300L)
+        accountMgr ! Envelope(counterAccNr, GetBalanceRequest)
+        expectMsg(700L)
+      }
+    }
+
   }
 }

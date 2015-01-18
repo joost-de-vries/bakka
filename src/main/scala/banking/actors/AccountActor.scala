@@ -29,7 +29,7 @@ object AccountActor {
 
 }
 
-class AccountActor(var account: Account) extends Actor with ActorLogging {
+class AccountActor(var account: Account) extends Actor with Stash with ActorLogging {
 
   import AccountActor._
 
@@ -74,10 +74,13 @@ class AccountActor(var account: Account) extends Actor with ActorLogging {
     case amount: Long =>
       account = newAccount
       origSender ! newAccount.balance
+      unstashAll()
       context unbecome()
     case error: String =>
       origSender ! error
+      unstashAll()
       context unbecome()
+    case a@_ if receive.isDefinedAt(a) => stash() //TODO stashed messages are ephemeral actor state; manage in case of restart
     case a@_ =>
       log.error(s"${getClass.getName} received unexpected message $a")
       sender() ! DoNotUnderstand.message

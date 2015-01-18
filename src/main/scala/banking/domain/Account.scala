@@ -5,13 +5,13 @@ import java.util.Date
 import scala.util.{Success, Failure, Try}
 
 
-case class Account(number: Long, history: List[Transaction]) {
+case class Account(number: Long, history: List[AccountAction]) {
 
   lazy val balance: Long = balance(history)
 
   def balance(date: Date): Long = balance(history.dropWhile(tx => tx.time.after(date)))
 
-  private def balance(forHistory: List[Transaction]) = forHistory.foldRight(0L) { (tx, acc) =>
+  private def balance(forHistory: List[AccountAction]) = forHistory.foldRight(0L) { (tx, acc) =>
     tx.amount(prevAmount = acc)
   }
 
