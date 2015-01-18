@@ -1,6 +1,7 @@
 import akka.testkit.TestProbe
-import banking.actors.AccountActor.{GetBalanceRequest, TransferFromRequest, DepositRequest}
+import banking.actors.AccountActor.{DepositRequest, GetBalanceRequest, TransferFromRequest}
 import banking.actors.AccountManagerActor
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -9,7 +10,8 @@ import scala.language.postfixOps
  * Created by j.de.vries on 30-12-2014.
  */
 class AccountManagerSpec extends ActorSpec{
-  import AccountManagerActor._
+
+  import banking.actors.AccountManagerActor._
 
   def accountManagerRef = system.actorOf(AccountManagerActor.props)
 
@@ -48,7 +50,7 @@ class AccountManagerSpec extends ActorSpec{
         expectMsg(30L)
       }
     }
-    "Not lose actions when transfering" in {
+    "Not lose actions when transferring" in {
       within(500 millis) {
         val accountMgr = accountManagerRef
         val accNr = 3

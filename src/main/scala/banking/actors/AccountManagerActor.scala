@@ -1,7 +1,7 @@
 package banking.actors
 
-import akka.actor.{ActorRef, Actor, ActorLogging, Props}
-import banking.domain.InsufficientFunds
+import akka.actor.{Actor, ActorLogging, Props}
+import banking.actors.AccountActor.TransferFromRequest
 
 object AccountManagerActor {
   def props = Props[AccountManagerActor]
@@ -9,6 +9,8 @@ object AccountManagerActor {
 
   case class Envelope[T](accountNumber: Long, payload: T)
   case class TransferRequest(amount:Long,toAccountNumber:Long)
+
+  case class UnconfirmedTransferFailure(fromAccountNr: Long, toAccountNr: Long, msg: TransferFromRequest)
 
   object NotAllowed {
     val message="not allowed"
@@ -19,8 +21,9 @@ object AccountManagerActor {
 }
 
 class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
-  import AccountManagerActor._
-  import AccountActor._
+
+  import banking.actors.AccountActor._
+  import banking.actors.AccountManagerActor._
   
 
   override def receive: Receive =     {
@@ -37,6 +40,8 @@ class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
       case Envelope(accountNumber, payload) =>
         getOrCreateChild(props = AccountActor.props(accountNumber), name = accountNumber.toString) forward payload
 
+      case error@UnconfirmedTransferFailure(fromAccountNr, toAccountNr, transferFromRequest) =>
+        log.error(s"did not receive transfer confirmation $error")
       case a@_ =>
         log.error(s"${getClass.getName} received unexpected message $a")
         sender() ! DoNotUnderstand

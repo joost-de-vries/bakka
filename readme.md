@@ -15,7 +15,6 @@ The current balance amount is determined by doing a `foldRight` on the history; 
 ##Concurrency
 
 ##Todo
-- handle handle case when counter account does not respond
 - add generated test cases that validate invariants during random transactions
 - add http api
 - add event sourcing persistence
