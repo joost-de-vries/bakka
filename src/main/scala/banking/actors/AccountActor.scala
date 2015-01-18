@@ -72,29 +72,29 @@ class AccountActor(var account: Account) extends Actor with Stash with ActorLogg
   /* waiting for a confirmation from the counter account
   * @param newAccount the new state of our account if the transfer is successful
   * @param origSender the actor whom we'll notify of the outcome * */
-  private def transferring(newAccount: Account, origSender: ActorRef, transferFromRequest: TransferFromRequest): Receive = {
+  def transferring(newAccount: Account, origSender: ActorRef, transferFromRequest: TransferFromRequest): Receive = {
     case amount: Long =>
       account = newAccount
       origSender ! newAccount.balance
-      context.setReceiveTimeout(Duration.Undefined)
-      unstashAll()
-      context unbecome()
+      unbecome()
     case error: String =>
       origSender ! error
-      context.setReceiveTimeout(Duration.Undefined)
-      unstashAll()
-      context unbecome()
+      unbecome()
     case ReceiveTimeout =>
       origSender ! s"timeout: did not receive confirmation of counter account within expected $TRANSFER_TIMEOUT millis"
       context.parent ! UnconfirmedTransferFailure(fromAccountNr = account.number, toAccountNr = transferFromRequest.toAccountNumber, msg = transferFromRequest)
-      context.setReceiveTimeout(Duration.Undefined)
-      unstashAll()
-      context unbecome()
+      unbecome()
     case a@_ if receive.isDefinedAt(a) => //stash messages intended for original receive
       context.setReceiveTimeout(context.receiveTimeout)
       stash()
   }
 
+  private def unbecome() = {
+    context.setReceiveTimeout(Duration.Undefined)
+    unstashAll()
+    context unbecome()
+  }
+  
   override def preRestart(reason: scala.Throwable, message: scala.Option[scala.Any]) = {
     log.debug(s"${getClass.getName} $account restarting")
     super.preRestart(reason, message)
