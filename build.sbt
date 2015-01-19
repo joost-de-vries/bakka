@@ -15,6 +15,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" % "akka-stream-experimental_2.11" % "1.0-M2",
   "com.typesafe.akka" % "akka-http-experimental_2.11" % "1.0-M2",
   "com.typesafe.akka" % "akka-http-core-experimental_2.11" % "1.0-M2",
+  "com.typesafe.akka" % "akka-http-xml-experimental_2.11" % "1.0-M2",
+  "com.typesafe.akka" % "akka-http-spray-json-experimental_2.11" % "1.0-M2",
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
   "com.typesafe.akka" % "akka-testkit_2.11" % "2.3.7" % "test"
 )
 
