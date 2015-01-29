@@ -12,13 +12,15 @@ class AccountActorSpec
 
   import banking.actors.AccountActor._
 
-  def accountRef(initialAmount: Long) = system.actorOf(AccountActor.props(Account(number = 100L, history = List(Deposit(new Date(), initialAmount)))))
+  def accountRef(initialAmount: Long) = system.actorOf(AccountActor.props( 
+    Account(number = 100L, history = List(Deposit(new Date(), initialAmount))))
+  )
 
   "An AccountActor" should {
     "Respond to a deposit with the new balance" in {
       within(500 millis) {
         accountRef(0L) ! DepositRequest(50L)
-        expectMsg(50L)
+        expectMsg(Balance(50L))
         expectNoMsg()
       }
     }
@@ -32,14 +34,14 @@ class AccountActorSpec
     "Respond to a withdrawal with the new balance" in {
       within(500 millis) {
         accountRef(50L) ! WithdrawalRequest(40L)
-        expectMsg(10L)
+        expectMsg(Balance(10L))
         expectNoMsg()
       }
     }
     "Respond to a balance request with the balance" in {
       within(500 millis) {
         accountRef(10L) ! GetBalanceRequest
-        expectMsg(10L)
+        expectMsg(Balance(10L))
         expectNoMsg()
       }
     }
@@ -48,8 +50,8 @@ class AccountActorSpec
         val toAccount = TestProbe()
         val account = accountRef(10L)
         account ! TransferFromRequest(amount = 7L, toAccountNumber = 200L, toAccount.ref)
-        account ! 1174L
-        expectMsg(3L)
+        account ! Balance(1174L)
+        expectMsg(Balance(3L))
         toAccount.expectMsg(500 millis, TransferToRequest(amount = 7L, fromAccountNumber = 100L))
         expectNoMsg()
       }
@@ -67,7 +69,7 @@ class AccountActorSpec
     "Respond to a transferTo with the balance" in {
       within(500 millis) {
         accountRef(3) ! TransferToRequest(amount = 7L, fromAccountNumber = 200L)
-        expectMsg(10L)
+        expectMsg(Balance(10L))
         expectNoMsg()
       }
     }
@@ -87,7 +89,7 @@ class AccountActorSpec
         }
 
         //our balancerequest should not resolve the transfer timeout and should be handled after the timeout
-        expectMsg(initialAmount)
+        expectMsg(Balance(initialAmount))
         expectNoMsg()
 
       }

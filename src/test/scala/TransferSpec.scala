@@ -7,6 +7,7 @@ import TestDate._
 import org.scalatest.junit.JUnitRunner
 
 import scala.util.Try
+
 @RunWith(classOf[JUnitRunner])
 class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValues {
   describe("An account") {
@@ -36,8 +37,8 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
       val resultAccount = (for {
         acc1 <- origAccount.deposit(amount = 100L, time = JAN1_2001)
         acc2 <- acc1.withdraw(amount = 30L, time = JAN3_2001)
-        acc3 <- acc2.withdraw(amount = 50L, time = JAN5_2001)}
-      yield acc3).get
+        acc3 <- acc2.withdraw(amount = 50L, time = JAN5_2001)
+      } yield acc3).get
 
       When("a previous balance is requested")
       val balance2 = resultAccount.balance(date = JAN3_2001)
@@ -63,11 +64,11 @@ class TransferSpec extends FunSpec with Matchers with GivenWhenThen with TryValu
 
       When("a withdrawal is made")
       val amount = 70L
-      val resultAccountTry = origAccount.withdraw(amount)
+      val accountTry = origAccount.withdraw(amount)
 
       Then("the result should be successful")
-      resultAccountTry should be a 'success
-      val resultAccount = resultAccountTry.get
+      accountTry should be a 'success
+      val resultAccount = accountTry.get
 
       And("the history should contain two transactions")
       resultAccount.history.size should be(2)

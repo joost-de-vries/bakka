@@ -1,14 +1,11 @@
 import akka.testkit.TestProbe
-import banking.actors.AccountActor.{DepositRequest, GetBalanceRequest, TransferFromRequest}
+import banking.actors.AccountActor.{Balance, DepositRequest, GetBalanceRequest, TransferFromRequest}
 import banking.actors.AccountManagerActor
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 
-/**
- * Created by j.de.vries on 30-12-2014.
- */
 class AccountManagerSpec extends ActorSpec{
 
   import banking.actors.AccountManagerActor._
@@ -19,16 +16,16 @@ class AccountManagerSpec extends ActorSpec{
     "Create a new accountactor and forward the depositrequest and balance response" in {
       within(500 millis) {
         accountManagerRef ! Envelope(accountNumber = 100L, DepositRequest(50L))
-        expectMsg(50L)
+        expectMsg(Balance(50L))
       }
     }
     "Get the same accountactor and forward the depositrequest and balance response" in {
       within(500 millis) {
         val accountManager = accountManagerRef
         accountManager ! Envelope(accountNumber = 100L, DepositRequest(50L))
-        expectMsg(50L)
+        expectMsg(Balance(50L))
         accountManager ! Envelope(accountNumber = 100L, DepositRequest(50L))
-        expectMsg(100L)
+        expectMsg(Balance(100L))
       }
     }
     "Not forward transferfrom or transferto request" in {
@@ -41,13 +38,13 @@ class AccountManagerSpec extends ActorSpec{
       within(500 millis) {
         val accountManager = accountManagerRef
         accountManager ! Envelope(accountNumber = 100L, DepositRequest(50L))
-        expectMsg(50L)
+        expectMsg(Balance(50L))
         accountManager ! Envelope(accountNumber = 100L, TransferRequest(amount = 20L, toAccountNumber = 123L))
-        expectMsg(30L)
+        expectMsg(Balance(30L))
         accountManager ! Envelope(accountNumber = 123L, GetBalanceRequest)
-        expectMsg(20L)
+        expectMsg(Balance(20L))
         accountManager ! Envelope(accountNumber = 100L, GetBalanceRequest)
-        expectMsg(30L)
+        expectMsg(Balance(30L))
       }
     }
     "Not lose actions when transferring" in {
@@ -62,13 +59,13 @@ class AccountManagerSpec extends ActorSpec{
 
         }
         for (msg <- receiveN(20)) {
-          msg.isInstanceOf[Long] should be(true)
+          msg.isInstanceOf[Balance] should be(true)
         }
 
         accountMgr ! Envelope(accNr, GetBalanceRequest)
-        expectMsg(300L)
+        expectMsg(Balance(300L))
         accountMgr ! Envelope(counterAccNr, GetBalanceRequest)
-        expectMsg(700L)
+        expectMsg(Balance(700L))
       }
     }
 

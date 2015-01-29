@@ -5,34 +5,44 @@ import java.util.Date
 import scala.util.{Success, Failure, Try}
 
 
-case class Account(number: Long, history: List[AccountAction]) {
+case class Account(number: Long, history: List[AccountEvent]) {
 
   lazy val balance: Long = balance(history)
 
   def balance(date: Date): Long = balance(history.dropWhile(tx => tx.time.after(date)))
 
-  private def balance(forHistory: List[AccountAction]) = forHistory.foldRight(0L) { (tx, acc) =>
+  private def balance(forHistory: List[AccountEvent]) = forHistory.foldRight(0L) { (tx, acc) =>
     tx.amount(prevAmount = acc)
   }
 
+  def withdrawEvent(amount: Long, time: Date = new Date()): Try[Withdrawal] = {
+    if (balance >= amount) Success(Withdrawal(time, amount)) else InsufficientFunds()
+  }
+
   def withdraw(amount: Long, time: Date = new Date()): Try[Account] = {
-    val tx = Withdrawal(time, amount)
-    tx.valid(this).map { _ => this.copy(history = tx :: history)}
+    withdrawEvent(amount,time) map {tx => tx.updated(this)}
+  }
+  
+  def depositEvent(amount: Long, time: Date = new Date()): Try[Deposit] = {
+    Success(Deposit(time, amount))
   }
 
   def deposit(amount: Long, time: Date = new Date()): Try[Account] = {
-    val tx = Deposit(time, amount)
-    tx.valid(this).map(_ => this.copy(history = tx :: history))
+    depositEvent(amount,time) map { tx => tx.updated(this)}
   }
-
+  
+  def transferEvent(amount: Long, toAccountNr: Long, time: Date = new Date()): Try[TransferFrom]={
+    if (balance >= amount) Success(TransferFrom(time, amount, toAccountNr = toAccountNr)) else InsufficientFunds()
+  }
   def transfer(amount: Long, toAccountNr: Long, time: Date = new Date()): Try[Account] = {
-    val tx = TransferFrom(time, amount, toAccountNr = toAccountNr)
-    tx.valid(this).map(_ => this.copy(history = tx :: this.history))
+    transferEvent(amount,toAccountNr,time) map {tx => tx.updated(this)}
   }
 
+  def receiveTransferEvent(amount: Long, fromAccountNr: Long, time: Date = new Date()): Try[TransferTo] = {
+    Success( TransferTo(time, amount, fromAccountNr = fromAccountNr))
+  }
   def receiveTransfer(amount: Long, fromAccountNr: Long, time: Date = new Date()): Try[Account] = {
-    val tx = TransferTo(time, amount, fromAccountNr = fromAccountNr)
-    tx.valid(this).map(_ => this.copy(history = tx :: this.history))
+    receiveTransferEvent(amount,fromAccountNr,time) map {tx => tx.updated(this)}
   }
 }
 

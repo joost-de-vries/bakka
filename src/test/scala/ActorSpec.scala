@@ -3,9 +3,6 @@ import akka.testkit.{ImplicitSender, DefaultTimeout, TestKit}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-/**
- * Created by j.de.vries on 30-12-2014.
- */
 class ActorSpec extends TestKit(ActorSystem("TestKitActorSystem",
   ConfigFactory.parseString(ActorSpec.config)))
 with DefaultTimeout with ImplicitSender

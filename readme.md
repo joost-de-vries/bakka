@@ -12,9 +12,14 @@ Validations and other domain logic are implemented in immutable objects and func
 
 The current balance amount is determined by doing a `foldRight` on the history; i.e. similar to an append data store that replays events to get to the current state. `foldRight` performs better on a right branching `List[Transaction]`. While `foldLeft` starts with the oldest `Transaction` and as a result respects validation constraints for intermediate results. 
 
+You can test the http api as follows:  
+`curl -X POST http://localhost:8080/account/123/deposit/25` will deposit 25 on account 123  
+`curl -X POST http://localhost:8080/account/123/transfer/25/to/234` will transfer 25 from account 123 to account 234  
+
 ##Concurrency
 
 ##Todo
 - add generated test cases that validate invariants during random transactions
-- add http api
-- add event sourcing persistence
+- support transaction failures in the http api
+- add test for http api
+- add test for event sourcing persistence
