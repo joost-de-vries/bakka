@@ -2,10 +2,8 @@ package banking.actors
 
 
 import akka.actor.{ActorLogging, _}
-import akka.persistence.{SnapshotOffer, RecoveryCompleted, PersistentActor}
-import banking.actors
-import banking.actors.AccountManagerActor.{DoNotUnderstand, UnconfirmedTransferFailure}
-import banking.domain.{TransferFrom, Withdrawal, AccountEvent, Account}
+import banking.actors.AccountManagerActor.UnconfirmedTransferFailure
+import banking.domain.{Account, AccountEvent, TransferFrom}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -44,7 +42,10 @@ class AccountActor(var account: Account) extends Accounting with Actor with Stas
   override def handleSuccess(theSender: ActorRef)(event: AccountEvent) = updateAndRespond(theSender)(event)
 }
 
-/** This trait handles the core Account commands protocol */
+/** This trait handles the core Account commands protocol.
+  * The actor has two states: receiveRequests and transferring. The latter state is when 
+  * the actor is waiting for confirmation from the other account that the transfer has been 
+  * received. During the latter state other incoming requests are stashed. */
 trait Accounting extends Stash with ActorLogging {
     this:Actor =>
     
@@ -127,24 +128,4 @@ trait Accounting extends Stash with ActorLogging {
       context unbecome()
     }
 }
-
-
-trait AccountingPersistency extends PersistentActor with ActorLogging {
-  this:Accounting =>
-
-  override def persistenceId = context.self.path.name
-
-  override def receiveRecover: Receive = {
-    case event:AccountEvent => log.info(s"recovering $event")
-      update(event)
-    case t: RecoveryCompleted =>
-      log.info(s"recovery completed")
-    case SnapshotOffer(_, newAccount: Account) =>
-      log.info(s"recovery: got snapshot: $newAccount")
-      account=newAccount
-  }
-}
-
-
-
 

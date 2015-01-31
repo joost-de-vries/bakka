@@ -1,15 +1,27 @@
 package banking.actors
 
-import akka.actor.{Props, ActorRef}
-import akka.persistence.PersistentActor
-import banking.domain.{AccountEvent, Account}
+import akka.actor.{ActorRef, Props}
+import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
+import banking.domain.{Account, AccountEvent}
 
-class PersistentAccountActor(var account:Account) extends Accounting with AccountingPersistency with PersistentActor{
+class PersistentAccountActor(var account: Account) extends Accounting with PersistentActor {
+  override def persistenceId = context.self.path.name
+  
   override def receiveCommand =receiveRequests
 
   override def handleSuccess(theSender: ActorRef)(event: AccountEvent) = persist(event) { event2 =>
     updateAndRespond(theSender)(event2)
     context.system.eventStream.publish(event)
+  }
+
+  override def receiveRecover: Receive = {
+    case event: AccountEvent => log.info(s"recovering $event")
+      update(event)
+    case t: RecoveryCompleted =>
+      log.info(s"recovery completed")
+    case SnapshotOffer(_, newAccount: Account) =>
+      log.info(s"recovery: got snapshot: $newAccount")
+      account = newAccount
   }
 }
 
@@ -19,3 +31,7 @@ object PersistentAccountActor {
   /** for testing purposes */
   def props(account: Account) = Props(new PersistentAccountActor(account))
 }
+
+
+
+
