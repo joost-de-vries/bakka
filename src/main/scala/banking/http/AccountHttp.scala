@@ -2,30 +2,21 @@ package banking.http
 
 import akka.actor.ActorSystem
 import akka.http.marshallers.sprayjson.SprayJsonSupport
-import akka.http.marshalling._
+import akka.http.marshallers.xml.ScalaXmlSupport._
+import akka.http.marshalling.ToEntityMarshaller
 import akka.http.server.Directives._
 import akka.http.server._
-import banking.actors.AccountActor.{WithdrawalRequest, DepositRequest, Balance, GetBalanceRequest}
-import banking.actors.AccountManagerActor.{TransferRequest, Envelope}
+import banking.actors.AccountActor.Balance
 import spray.json.DefaultJsonProtocol._
-import akka.http.marshalling.{ToEntityMarshaller, ToResponseMarshallable}
-import akka.pattern.ask
-import akka.http.marshallers.xml.ScalaXmlSupport
 
 
-trait AccountAPI {
-  this: Main.type =>
+object AccountHttp {
 
-  implicit def system: ActorSystem
-
-  import system.dispatcher
-
-  implicit val balanceFormat = jsonFormat1(Balance)
-  implicit val marshaller: ToEntityMarshaller[Balance] = SprayJsonSupport.sprayJsonMarshaller[Balance]
-
-  import ScalaXmlSupport._
-
-  val routing: Route = {
+  def routing(accountService: AccountService)(implicit system: ActorSystem): Route = {
+    import system.dispatcher
+    implicit val balanceFormat = jsonFormat1(Balance)
+    implicit val marshaller: ToEntityMarshaller[Balance] = SprayJsonSupport.sprayJsonMarshaller[Balance]
+    
     path("") {
       get {
         complete(index)
@@ -34,20 +25,20 @@ trait AccountAPI {
       pathPrefix("account" / LongNumber) { accountNr =>
         pathEnd {
           complete {
-            (service ? Envelope(accountNumber = accountNr, GetBalanceRequest)).mapTo[Balance]
+            accountService.balance(accountNr)
           }
         } ~
           pathPrefix("deposit" / LongNumber) { amount =>
             post {
               complete {
-                (service ? Envelope(accountNumber = accountNr, DepositRequest(amount))).mapTo[Balance]
+                accountService.deposit(accountNumber = accountNr, amount = amount)
               }
             }
           } ~
           pathPrefix("withdraw" / LongNumber) { amount =>
             post {
               complete {
-                (service ? Envelope(accountNumber = accountNr, WithdrawalRequest(amount))).mapTo[Balance]
+                accountService.withdraw(accountNumber = accountNr, amount = amount)
               }
             }
           } ~
@@ -55,7 +46,7 @@ trait AccountAPI {
             pathPrefix("to" / LongNumber) { toAccountNr =>
               post {
                 complete {
-                  (service ? Envelope(accountNumber = accountNr, TransferRequest(amount = amount, toAccountNumber = toAccountNr))).mapTo[Balance]
+                  accountService.transfer(fromAccountNumber = accountNr, amount = amount, toAccountNumber = toAccountNr)
                 }
               }
             }

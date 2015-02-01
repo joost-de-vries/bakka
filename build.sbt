@@ -14,17 +14,20 @@ libraryDependencies ++= {
   val akkaStreamHttpVersion="1.0-M2"
   val akkaVersion="2.3.9"
   Seq(
-    "org.scalatest" %% "scalatest" % "2.1.6" % "test",
-    "junit" % "junit" % "4.12" % "test",
-    "org.scalacheck" %% "scalacheck" % "1.12.1" % "test",
     "com.typesafe.akka" % "akka-stream-experimental_2.11" % akkaStreamHttpVersion,
     "com.typesafe.akka" % "akka-http-experimental_2.11" % akkaStreamHttpVersion,
     "com.typesafe.akka" % "akka-http-core-experimental_2.11" % akkaStreamHttpVersion,
     "com.typesafe.akka" % "akka-http-xml-experimental_2.11" % akkaStreamHttpVersion,
     "com.typesafe.akka" % "akka-http-spray-json-experimental_2.11" % akkaStreamHttpVersion,
+    "com.typesafe.akka" % "akka-persistence-experimental_2.11" % akkaVersion,
     "org.scala-lang.modules" %% "scala-xml" % "1.0.2",
+
+    //test dependencies
+    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaStreamHttpVersion % "test",
     "com.typesafe.akka" % "akka-testkit_2.11" % akkaVersion % "test",
-    "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
+    "org.scalatest" %% "scalatest" % "2.1.6" % "test",
+    "junit" % "junit" % "4.12" % "test",
+    "org.scalacheck" %% "scalacheck" % "1.12.1" % "test",
     "commons-io" % "commons-io" % "2.4" % "test"
   )
 }

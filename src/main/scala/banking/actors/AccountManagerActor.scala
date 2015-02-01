@@ -21,10 +21,8 @@ object AccountManagerActor {
 }
 
 class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
-
   import banking.actors.AccountActor._
   import banking.actors.AccountManagerActor._
-  
 
   override def receive: Receive =     {
 
@@ -37,7 +35,7 @@ class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
         val toAccountRef = getOrCreateChild(props = AccountActor.props(toAccountNumber), name = toAccountNumber.toString)
         fromAccountRef forward TransferFromRequest(amount = amount, toAccountNumber = toAccountNumber, toAccountRef)
 
-      case Envelope(accountNumber, payload) =>
+      case Envelope(accountNumber, payload: AccountActor.Command) =>
         getOrCreateChild(props = AccountActor.props(accountNumber), name = accountNumber.toString) forward payload
 
       case error@UnconfirmedTransferFailure(fromAccountNr, toAccountNr, transferFromRequest) =>
@@ -46,6 +44,4 @@ class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
         log.error(s"${getClass.getName} received unexpected message $a")
         sender() ! DoNotUnderstand
     }
-  
-
 }
