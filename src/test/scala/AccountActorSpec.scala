@@ -2,7 +2,7 @@ import java.util.Date
 
 import akka.testkit._
 import banking.actors.AccountActor
-import banking.domain.{Account, Deposit, InsufficientFunds}
+import banking.domain.{Account, Deposit, InsufficientFundsException}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -27,7 +27,7 @@ class AccountActorSpec
     "Not allow a withdrawal in case of insufficient funds" in {
       within(500 millis) {
         accountRef(50L) ! WithdrawalRequest(70L)
-        expectMsg(InsufficientFunds.message)
+        expectFailure[InsufficientFundsException]
         expectNoMsg()
       }
     }
@@ -61,7 +61,7 @@ class AccountActorSpec
         val toAccount = TestProbe()
         val account = accountRef(5L)
         account ! TransferFromRequest(amount = 7L, toAccountNumber = 200L, toAccount.ref)
-        expectMsg(InsufficientFunds.message)
+        expectFailure[InsufficientFundsException]
         toAccount.expectNoMsg(500 millis)
         expectNoMsg()
       }

@@ -4,9 +4,11 @@ import akka.actor.ActorSystem
 import akka.http.marshallers.sprayjson.SprayJsonSupport
 import akka.http.marshallers.xml.ScalaXmlSupport._
 import akka.http.marshalling.ToEntityMarshaller
+import akka.http.model.{HttpResponse, StatusCodes}
 import akka.http.server.Directives._
 import akka.http.server._
 import banking.actors.AccountActor.Balance
+import banking.domain.InsufficientFundsException
 import spray.json.DefaultJsonProtocol._
 
 
@@ -16,7 +18,7 @@ object AccountHttp {
     import system.dispatcher
     implicit val balanceFormat = jsonFormat1(Balance)
     implicit val marshaller: ToEntityMarshaller[Balance] = SprayJsonSupport.sprayJsonMarshaller[Balance]
-    
+
     path("") {
       get {
         complete(index)
@@ -28,31 +30,42 @@ object AccountHttp {
             accountService.balance(accountNr)
           }
         } ~
-          pathPrefix("deposit" / LongNumber) { amount =>
-            post {
-              complete {
-                accountService.deposit(accountNumber = accountNr, amount = amount)
-              }
-            }
-          } ~
-          pathPrefix("withdraw" / LongNumber) { amount =>
-            post {
-              complete {
-                accountService.withdraw(accountNumber = accountNr, amount = amount)
-              }
-            }
-          } ~
-          pathPrefix("transfer" / LongNumber) { amount =>
-            pathPrefix("to" / LongNumber) { toAccountNr =>
+          handleExceptions(insufficientFundsHandler) {
+            pathPrefix("deposit" / LongNumber) { amount =>
               post {
                 complete {
-                  accountService.transfer(fromAccountNumber = accountNr, amount = amount, toAccountNumber = toAccountNr)
+                  accountService.deposit(accountNumber = accountNr, amount = amount)
                 }
               }
-            }
+            } ~
+              pathPrefix("withdraw" / LongNumber) { amount =>
+                post {
+                  complete {
+                    accountService.withdraw(accountNumber = accountNr, amount = amount)
+                  }
+                }
+              } ~
+              pathPrefix("transfer" / LongNumber) { amount =>
+                pathPrefix("to" / LongNumber) { toAccountNr =>
+                  post {
+                    complete {
+                      accountService.transfer(fromAccountNumber = accountNr, amount = amount, toAccountNumber = toAccountNr)
+                    }
+                  }
+                }
+              }
           }
       }
   }
+
+  def insufficientFundsHandler = ExceptionHandler {
+    case e: InsufficientFundsException =>
+      println("caught exception")
+      extractUri { uri =>
+        complete(HttpResponse(StatusCodes.BadRequest, entity = e.getMessage))
+      }
+  }
+
   lazy val index =
     <html>
       <body>

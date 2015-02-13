@@ -1,7 +1,7 @@
 package banking.actors
 
-import akka.actor.{Actor, ActorLogging, Props}
-import banking.actors.AccountActor.TransferFromRequest
+import akka.actor.{Actor, ActorLogging, Props, Status}
+import banking.actors.AccountActor.{TransferFromRequest, TransferToRequest}
 
 object AccountManagerActor {
   def props = Props[AccountManagerActor]
@@ -10,18 +10,26 @@ object AccountManagerActor {
   case class Envelope[T](accountNumber: Long, payload: T)
   case class TransferRequest(amount:Long,toAccountNumber:Long)
 
-  case class UnconfirmedTransferFailure(fromAccountNr: Long, toAccountNr: Long, msg: TransferFromRequest)
-
   object NotAllowed {
-    val message="not allowed"
+    val message = Status.Failure(new IllegalAccessException())
   }
   object DoNotUnderstand {
-    val message="do not understand"
+    val message = Status.Failure(new UnsupportedOperationException())
+  }
+
+  class UnconfirmedTransferException(val fromAccountNr: Long, val toAccountNr: Long, val request: TransferFromRequest) extends Exception
+
+  object UnconfirmedTransferFailure {
+    def apply(fromAccountNr: Long, toAccountNr: Long, msg: TransferFromRequest) = Status.Failure(new UnconfirmedTransferException(fromAccountNr, toAccountNr, msg))
+
+    def unapply(failure: Status.Failure) = failure.cause match {
+      case e: UnconfirmedTransferException => Some((e.fromAccountNr, e.toAccountNr, e.request))
+      case _ => None
+    }
   }
 }
 
 class AccountManagerActor() extends Actor with ActorCreation with ActorLogging {
-  import banking.actors.AccountActor._
   import banking.actors.AccountManagerActor._
 
   override def receive: Receive =     {

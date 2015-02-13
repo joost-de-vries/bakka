@@ -11,7 +11,7 @@ updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true
 scalacOptions ++= Seq("-unchecked", "-feature", "-deprecation")
 
 libraryDependencies ++= {
-  val akkaStreamHttpVersion="1.0-M2"
+  val akkaStreamHttpVersion = "1.0-M3"
   val akkaVersion="2.3.9"
   Seq(
     "com.typesafe.akka" % "akka-stream-experimental_2.11" % akkaStreamHttpVersion,

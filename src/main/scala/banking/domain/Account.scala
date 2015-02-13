@@ -2,7 +2,7 @@ package banking.domain
 
 import java.util.Date
 
-import scala.util.{Success, Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 
 case class Account(number: Long, history: List[AccountEvent]) {
@@ -30,7 +30,8 @@ case class Account(number: Long, history: List[AccountEvent]) {
   def deposit(amount: Long, time: Date = new Date()): Try[Account] = {
     depositEvent(amount,time) map { tx => tx.updated(this)}
   }
-  
+
+
   def transferEvent(amount: Long, toAccountNr: Long, time: Date = new Date()): Try[TransferFrom]={
     if (balance >= amount) Success(TransferFrom(time, amount, toAccountNr = toAccountNr)) else InsufficientFunds()
   }
@@ -60,10 +61,12 @@ object Account {
   }
 
   def newAccount(number: Long): Account = Account(number, Nil)
-}
 
+}
 object InsufficientFunds {
-  def apply() = Failure(new RuntimeException(message))
-
-  val message = "insufficient funds"
+  def apply() = Failure(new InsufficientFundsException())
 }
+
+class InsufficientFundsException extends Exception("insufficient funds")
+
+

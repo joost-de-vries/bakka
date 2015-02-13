@@ -33,6 +33,8 @@ object AccountActor {
   case class TransferToRequest(amount: Long, fromAccountNumber: Long) extends Command
 
   case class TransferFromRequest(amount: Long, toAccountNumber: Long, toAccount: ActorRef) extends Command
+
+  val DoNotUnderstand = AccountManagerActor.DoNotUnderstand
 }
 
 
@@ -66,7 +68,7 @@ trait Accounting extends Stash with ActorLogging {
           context.setReceiveTimeout(TRANSFER_TIMEOUT millis)
           context become transferring(transferFromEvent, sender(), msg)
         case Failure(e) =>
-          sender() ! e.getMessage
+          sender() ! Status.Failure(e)
       }
     case TransferToRequest(amount, fromAccNumber) =>
       respond(account.receiveTransferEvent(amount, fromAccountNr = fromAccNumber))
@@ -74,8 +76,9 @@ trait Accounting extends Stash with ActorLogging {
     case GetBalanceRequest =>
       sender() ! Balance(account.balance)
 
-    case msg:Any => 
-      throw new RuntimeException(s"unexpected message $msg")
+    case msg: Any =>
+      log.error(s"received unexpected message $msg")
+      sender() ! DoNotUnderstand
   }
 
   /** Either handle a successful accountEvent or handle the failure. 
@@ -84,7 +87,8 @@ trait Accounting extends Stash with ActorLogging {
   def respond(eventTry:Try[AccountEvent],theSender:ActorRef=sender()) = eventTry match{
     case Success(event:AccountEvent) =>
         handleSuccess(theSender)(event)
-    case Failure(e) => theSender ! e.getMessage
+    case Failure(e) =>
+      theSender ! Status.Failure(e)
   }
 
     /** this will be implemented differently by a non persistent actor implementation or a persistent actor implementation */
@@ -108,7 +112,7 @@ trait Accounting extends Stash with ActorLogging {
       case Balance(_) =>
         respond(Success(transferFrom), origSender)
         unbecome()
-      case error: String =>
+      case error: Status.Failure =>
         origSender ! error
         unbecome()
       case ReceiveTimeout =>
@@ -119,7 +123,8 @@ trait Accounting extends Stash with ActorLogging {
         context.setReceiveTimeout(context.receiveTimeout)
         stash()
       case msg: Any =>
-        throw new RuntimeException(s"unexpected message $msg")
+        log.error(s"received unexpected message $msg")
+        sender() ! DoNotUnderstand
     }
 
     private def unbecome() = {

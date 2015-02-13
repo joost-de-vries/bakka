@@ -20,6 +20,5 @@ You can test the http api as follows:
 
 ##Todo
 - add generated test cases that validate invariants during random transactions
-- support transaction failures in the http api
 - add test for http api
 - add test for event sourcing persistence

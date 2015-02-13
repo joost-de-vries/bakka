@@ -3,7 +3,7 @@ package banking.http
 import akka.actor.ActorSystem
 import akka.http.Http
 import akka.http.marshallers.sprayjson.SprayJsonSupport
-import akka.stream.FlowMaterializer
+import akka.stream.ActorFlowMaterializer
 import akka.util.Timeout
 import banking.actors.AccountManagerActor
 import banking.http.AccountHttp.routing
@@ -21,7 +21,7 @@ object Main extends App with SprayJsonSupport {
 
   val service = new AccountService(system.actorOf(AccountManagerActor.props, AccountManagerActor.name))
 
-  implicit val materializer = FlowMaterializer()
+  implicit val materializer = ActorFlowMaterializer()
   implicit val timeout = Timeout(1000 millis)
   val serverBinding = Http().bind(interface = "localhost", port = 8080)
 
