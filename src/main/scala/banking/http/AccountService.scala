@@ -2,13 +2,15 @@ package banking.http
 
 import akka.actor.ActorRef
 import akka.pattern.ask
+import akka.util.Timeout
 import banking.actors.AccountActor.{Balance, DepositRequest, GetBalanceRequest, WithdrawalRequest}
 import banking.actors.AccountManagerActor.{Envelope, TransferRequest}
-import banking.http.Main._
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class AccountService(accountManagerActor: ActorRef) {
+  implicit val timeout = new Timeout(500 millis)
 
   def balance(accountNumber: Long): Future[Balance] =
     (accountManagerActor ? Envelope(accountNumber = accountNumber, GetBalanceRequest)).mapTo[Balance]

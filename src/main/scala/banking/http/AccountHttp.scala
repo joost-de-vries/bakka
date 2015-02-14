@@ -7,17 +7,18 @@ import akka.http.marshalling.ToEntityMarshaller
 import akka.http.model.{HttpResponse, StatusCodes}
 import akka.http.server.Directives._
 import akka.http.server._
+import banking.actors.AccountActor
 import banking.actors.AccountActor.Balance
 import banking.domain.InsufficientFundsException
-import spray.json.DefaultJsonProtocol._
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 
-object AccountHttp {
+trait AccountHttp {
+  this: HasActorSystem =>
 
   def routing(accountService: AccountService)(implicit system: ActorSystem): Route = {
+    import banking.http.AccountJsonProtocol._
     import system.dispatcher
-    implicit val balanceFormat = jsonFormat1(Balance)
-    implicit val marshaller: ToEntityMarshaller[Balance] = SprayJsonSupport.sprayJsonMarshaller[Balance]
 
     path("") {
       get {
@@ -58,7 +59,7 @@ object AccountHttp {
       }
   }
 
-  def insufficientFundsHandler = ExceptionHandler {
+  private def insufficientFundsHandler = ExceptionHandler {
     case e: InsufficientFundsException =>
       println("caught exception")
       extractUri { uri =>
@@ -82,4 +83,12 @@ object AccountHttp {
         </ul>
       </body>
     </html>
+}
+
+object AccountJsonProtocol extends DefaultJsonProtocol {
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  implicit val balanceFormat: RootJsonFormat[AccountActor.Balance] = jsonFormat1(Balance)
+  implicit val balanceMarshaller: ToEntityMarshaller[Balance] = SprayJsonSupport.sprayJsonMarshaller[Balance]
 }

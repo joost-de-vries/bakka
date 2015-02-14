@@ -6,13 +6,15 @@ import akka.http.marshallers.sprayjson.SprayJsonSupport
 import akka.stream.ActorFlowMaterializer
 import akka.util.Timeout
 import banking.actors.AccountManagerActor
-import banking.http.AccountHttp.routing
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
+trait HasActorSystem {
+  implicit def system: ActorSystem
+}
 
-object Main extends App with SprayJsonSupport {
+object Main extends App with AccountHttp with HasActorSystem with SprayJsonSupport {
   implicit lazy val system = ActorSystem("webapi")
 
   import banking.http.Main.system.dispatcher
