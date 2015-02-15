@@ -8,6 +8,7 @@ import banking.actors.AccountManagerActor.{Envelope, TransferRequest}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 class AccountService(accountManagerActor: ActorRef) {
   implicit val timeout = new Timeout(500 millis)

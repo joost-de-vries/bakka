@@ -19,7 +19,7 @@ class AccountHttpSpec extends WordSpec with HasActorSystem with AccountHttp with
 
     "respond with the balance to a GetBalanceRequest" in {
       import akka.http.marshallers.sprayjson.SprayJsonSupport._
-      import banking.http.AccountJsonProtocol._
+      import banking.http.AccountJsonProtocol.balanceFormat
 
 
       Get("/account/234") ~> theRoute ~> check {
