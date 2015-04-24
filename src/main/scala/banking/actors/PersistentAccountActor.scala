@@ -9,9 +9,11 @@ class PersistentAccountActor(var account: Account) extends Accounting with Persi
   
   override def receiveCommand =receiveRequests
 
-  override def handleSuccess(theSender: ActorRef)(event: AccountEvent) = persist(event) { event2 =>
-    updateAndRespond(theSender)(event2)
-    context.system.eventStream.publish(event)
+  override def handleSuccess(theSender: ActorRef)(event: AccountEvent) = {
+    persist(event) { event2 =>
+      updateAndRespond(theSender)(event2)
+      context.system.eventStream.publish(event)
+    }
   }
 
   override def receiveRecover: Receive = {
