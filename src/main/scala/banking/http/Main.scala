@@ -25,11 +25,10 @@ object Main extends App with AccountHttp with HasActorSystem with SprayJsonSuppo
 
   implicit val materializer = ActorFlowMaterializer()
   implicit val timeout = Timeout(1000 millis)
-  val serverBinding = Http().bind(interface = "localhost", port = 8080)
+  val serverBinding = Http().bindAndHandle(interface = "localhost", port = 8080, handler = routing(service))
 
-  val materializedMap = serverBinding startHandlingWith routing(service)
   println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
   readLine()
-  serverBinding.unbind(materializedMap).onComplete(_ ⇒ system.shutdown())
+  system.shutdown()
 
 }
