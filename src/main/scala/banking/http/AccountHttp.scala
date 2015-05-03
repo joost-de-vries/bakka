@@ -1,12 +1,12 @@
 package banking.http
 
 import akka.actor.ActorSystem
-import akka.http.marshallers.sprayjson.SprayJsonSupport
-import akka.http.marshallers.xml.ScalaXmlSupport._
-import akka.http.marshalling.ToEntityMarshaller
-import akka.http.model.{HttpResponse, StatusCodes}
-import akka.http.server.Directives._
-import akka.http.server._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport._
+import akka.http.scaladsl.marshalling.ToEntityMarshaller
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{Route, _}
 import banking.actors.AccountActor
 import banking.actors.AccountActor.Balance
 import banking.domain.InsufficientFundsException
