@@ -61,7 +61,6 @@ trait AccountHttp {
 
   private def insufficientFundsHandler = ExceptionHandler {
     case e: InsufficientFundsException =>
-      println("caught exception")
       extractUri { uri =>
         complete(HttpResponse(StatusCodes.BadRequest, entity = e.getMessage))
       }
